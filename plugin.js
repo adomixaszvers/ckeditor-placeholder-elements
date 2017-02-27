@@ -838,7 +838,51 @@
 					init: function()
 					{
 						uiElement = this;
+						uiElement.add('search', '<div onmouseover="parent.comboSearch(this);" onclick="parent.comboSearch(this);"><input class="cke_search" placeholder="Search"/></div>', '');
 						popuplateRichCombo();
+						if(!jQuery.expr[':'].icontains){
+							jQuery.expr[':'].icontains = function(a, i, m) {
+								return jQuery(a).text().toUpperCase().indexOf(m[3].toUpperCase()) >= 0;
+							};
+						}
+
+						window.comboSearch= function(element) {
+
+							var anchorID = $(element).closest('a').attr("id");
+							var liDom = $(element).closest('li');
+
+							liDom.empty().append('<div id="' + anchorID + '" style="padding:4px 5px;"><input class="cke_search" placeholder="Search" /></div>');
+
+							liDom.find('input').off("keyup").on("keyup", function() {
+								var data = this.value;
+								//create a jquery object of the rows
+								var jo = liDom.parentsUntil('.cke_ltr').find('.cke_panel_list:eq(1) li');
+
+								filter.call(this, data, jo);
+
+							}).focus(function() {
+								this.value = "";
+								$(this).unbind('focus');
+							});
+						};
+
+						function filter(data, jo) {
+							if (this.value === "") {
+								jo.show();
+								return;
+							}
+							//hide all the rows
+							jo.hide();
+
+							//Recusively filter the jquery object to get results.
+							jo.filter(function(i, v) {
+								var $t = $(this);
+								if ($t.is(":icontains('" + data + "')")) {
+									return true;
+								}
+								return false;
+							}).show();
+						}
 					},
 
 					onClick: function(value)
